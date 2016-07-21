@@ -19,7 +19,7 @@ class Vector {
     constructor(public dimensions: number) {
         this.values = [];
         this.values.length = dimensions;
-        for (var i=0; i<this.values.length; i++) {
+        for (let i=0; i<this.values.length; i++) {
             this.values[i] = 0;
         }
     }
@@ -31,8 +31,8 @@ class Vector {
     dimensions: number[];
 
     clone() {
-        var res = new Vector(this.dimensions);
-        for (var i=0; i<this.values.length; i++) {
+        let res = new Vector(this.dimensions);
+        for (let i=0; i<this.values.length; i++) {
             res.values[i] = this.values[i];
         }
         return res;     
@@ -41,7 +41,7 @@ class Vector {
     add(v: Vector) {
         if (this.dimensions != v.dimensions)
             throw new RangeError();
-        for (var i=0; i<this.values.length; i++) {
+        for (let i=0; i<this.values.length; i++) {
             this.values[i] += v.values[i];
         }
         return this;
@@ -50,14 +50,14 @@ class Vector {
     subtract(v: Vector) {
         if (this.dimensions != v.dimensions)
             throw new RangeError();
-        for (var i=0; i<this.values.length; i++) {
+        for (let i=0; i<this.values.length; i++) {
             this.values[i] -= v.values[i];
         }
         return this;
     }
 
     multiply(k: number) {
-        for (var i=0; i<this.values.length; i++) {
+        for (let i=0; i<this.values.length; i++) {
             this.values[i] *= k;
         }
         return this;
@@ -66,42 +66,42 @@ class Vector {
 
 class NelderMeadSimplex {
     constructor() {
-        this.jitter = 1e-10;
     }
 
-    jitter: number;
+    static jitter: number = 1e-10;
 
-    regress(simplexConstants: SimplexConstant[], convergenceTolerance: number, 
-        maxEvaluations: number, objectiveFunction: (x: number[]) => number[]) {
+    static regress(simplexConstants: SimplexConstant[], convergenceTolerance: number, 
+        maxEvaluations: number, objectiveFunction: (x: number[]) => number) {
         
-        var numDimensions = simplexConstants.length;
-        var numVertices = numDimensions + 1;
-        var vertices = this.initializeVertices(simplexConstants);
+        let numDimensions = simplexConstants.length;
+        let numVertices = numDimensions + 1;
+        let vertices = NelderMeadSimplex.initializeVertices(simplexConstants);
 
-        var evaluationCount = 0;
-        var terminationReason = "Unspecified";
-        var errorProfile;
+        let evaluationCount = 0;
+        let terminationReason = "Unspecified";
+        let errorProfile;
 
-        var errorValues = this.initializeErrorValues(vertices, objectiveFunction);
+        let errorValues = NelderMeadSimplex.initializeErrorValues(vertices, objectiveFunction);
+        let errorProfile;
 
         while (true) {
-            var errorProfile = this.evaluateSimplex(errorValues);
-            if (this.hasConverged(convergenceTolerance, errorProfile, errorValues)) {
+            errorProfile = NelderMeadSimplex.evaluateSimplex(errorValues);
+            if (NelderMeadSimplex.hasConverged(convergenceTolerance, errorProfile, errorValues)) {
                 terminationReason = "Converged";
                 break;
             }
-            var reflectionPointValue = this.tryToScaleSimplex(-1.0, errorProfile, vertices, errorValues, objectiveFunction);
+            let reflectionPointValue = NelderMeadSimplex.tryToScaleSimplex(-1.0, errorProfile, vertices, errorValues, objectiveFunction);
             evaluationCount++;
             if (reflectionPointValue <= errorValues[errorProfile.lowestIndex]) {
-                var expansionPointValue = this.tryToScaleSimplex(2.0, errorProfile, vertices, errorValues, objectiveFunction);
+                let expansionPointValue = NelderMeadSimplex.tryToScaleSimplex(2.0, errorProfile, vertices, errorValues, objectiveFunction);
                 evaluationCount++;
             }
             else if (reflectionPointValue >= errorValues[errorProfile.nextHighestIndex]) {
-                var currentWorst = errorValues[errorProfile.highestIndex];
-                contractionPointValue = this.tryToScaleSimplex(0.5, errorProfile, vertices, errorValues, objectiveFunction);
+                let currentWorst = errorValues[errorProfile.highestIndex];
+                contractionPointValue = NelderMeadSimplex.tryToScaleSimplex(0.5, errorProfile, vertices, errorValues, objectiveFunction);
                 evaluationCount++;
                 if (contractionPointValue >= currentWorst) {
-                    this.shrinkSimplex(errorProfile, vertices, errorValues, objectiveFunction);
+                    NelderMeadSimplex.shrinkSimplex(errorProfile, vertices, errorValues, objectiveFunction);
                     evaluationCount += numVertices;
                 }
             }
@@ -114,33 +114,33 @@ class NelderMeadSimplex {
             errorValues[errorProfile.lowestIndex], evaluationCount);
     }
 
-    initializeVertices(simplexConstants: SimplexConstant[]) {
-        var numDimensions = simplexConstants.length;
-        var vertices = [];
-        var p0 = new Vector(numDimensions);
-        for (var i=0; i<numDimensions; i++) {
+    static initializeVertices(simplexConstants: SimplexConstant[]) {
+        let numDimensions = simplexConstants.length;
+        let vertices = [];
+        let p0 = new Vector(numDimensions);
+        for (let i=0; i<numDimensions; i++) {
             p0.values[i] = simplexConstants[i].value;
         }
         vertices.push(p0);
-        for (var i=0; i<numDimensions; i++) {
-            var scale = simplexConstants[i].initialPerturbation;
-            var unitVector = new Vector(numDimensions);
+        for (let i=0; i<numDimensions; i++) {
+            let scale = simplexConstants[i].initialPerturbation;
+            let unitVector = new Vector(numDimensions);
             unitVector.values[i] = 1;
             vertices.push(p0.clone().add(unitVector.multiply(scale)));
         }
         return vertices;
     }
 
-    initializeErrorValues(vertices: Vector[], objectiveFunction: (x: number[]) => number[]) {
-        var errorValues = [];
-        for (var i=0; i<vertices.length; i++) {
+    static initializeErrorValues(vertices: Vector[], objectiveFunction: (x: number[]) => number) {
+        let errorValues = [];
+        for (let i=0; i<vertices.length; i++) {
             errorValues.push(objectiveFunction(vertices[i].values));
         }
         return errorValues;
     }
 
-    evaluateSimplex(errorValues: number[]) {
-        var errorProfile = new ErrorProfile();
+    static evaluateSimplex(errorValues: number[]) {
+        let errorProfile = new ErrorProfile();
         if (errorValues[0] > errorValues[1]) {
             errorProfile.highestIndex = 0;
             errorProfile.nextHighestIndex = 1;
@@ -150,8 +150,8 @@ class NelderMeadSimplex {
             errorProfile.nextHighestIndex = 0;
         }
         errorProfile.lowestIndex = 0;
-        for (var i=0; i<errorValues.length; i++) {
-            var errorValue = errorValues[i];
+        for (let i=0; i<errorValues.length; i++) {
+            let errorValue = errorValues[i];
             if (errorValue <= errorValues[errorProfile.lowestIndex]) {
                 errorProfile.lowestIndex = i;
             }
@@ -166,20 +166,21 @@ class NelderMeadSimplex {
         return errorProfile;
     }
 
-    hasConverged(convergenceTolerance: number, errorProfile: ErrorProfile, errorValues: number[]) {
-        var range = 2 * Math.abs(errorValues[errorProfile.highestIndex] - errorValues[errorProfile.lowestIndex]) /
-                (Math.abs(errorValues[errorProfile.highestIndex]) + Math.abs(errorValues[errorProfile.lowestIndex]) + this.jitter);
+    static hasConverged(convergenceTolerance: number, errorProfile: ErrorProfile, errorValues: number[]) {
+        let range = 2 * Math.abs(errorValues[errorProfile.highestIndex] - errorValues[errorProfile.lowestIndex]) /
+                (Math.abs(errorValues[errorProfile.highestIndex]) + Math.abs(errorValues[errorProfile.lowestIndex]) + NelderMeadSimplex.jitter);
 
         if (range < convergenceTolerance)
             return true;
         return false;
     }
 
-    tryToScaleSimplex(scaleFactor: number, errorProfile: ErrorProfile, vertices: Vector[], errorValues: number[], objectiveFunction: (x: number[]) => number[]) {
-        var centroid = this.computeCentroid(vertices, errorProfile);
-        var centroidToHighPoint = vertices[errorProfile.highestIndex].clone().subtract(centroid);
-        var newPoint = centroidToHighPoint.multiply(scaleFactor).add(centroid);
-        var newErrorValue = objectiveFunction(newPoint.values);
+    static tryToScaleSimplex(scaleFactor: number, errorProfile: ErrorProfile, vertices: Vector[], errorValues: number[], 
+        objectiveFunction: (x: number[]) => number) {
+        let centroid = NelderMeadSimplex.computeCentroid(vertices, errorProfile);
+        let centroidToHighPoint = vertices[errorProfile.highestIndex].clone().subtract(centroid);
+        let newPoint = centroidToHighPoint.multiply(scaleFactor).add(centroid);
+        let newErrorValue = objectiveFunction(newPoint.values);
         if (newErrorValue < errorValues[errorProfile.highestIndex]) {
             vertices[errorProfile.highestIndex] = newPoint;
             errorValues[errorProfile.highestIndex] = newErrorValue;
@@ -187,10 +188,21 @@ class NelderMeadSimplex {
         return newErrorValue;
     }
 
-    computeCentroid(vertices: Vector[], errorProfile: ErrorProfile) {
-        var numVertices = vertices.length;
-        var centroid = new Vector(numVertices - 1);
-        for (var i=0; i<numVertices; i++) {
+    static shrinkSimplex(errorProfile: ErrorProfile, vertices: Vector[], errorValues: number[],
+        , objectiveFunction: (x: number[]) => number) {
+        let lowestVertex = vertices[errorProfile.LowestIndex];
+        for (let i = 0; i < vertices.length; i++) {
+            if (i != errorProfile.LowestIndex) {
+                vertices[i].add(lowestVertex).multiply(0.5);
+                errorValues[i] = objectiveFunction(vertices[i].values);
+            }
+        }
+    }
+
+    static computeCentroid(vertices: Vector[], errorProfile: ErrorProfile) {
+        let numVertices = vertices.length;
+        let centroid = new Vector(numVertices - 1);
+        for (let i=0; i<numVertices; i++) {
             if (i != errorProfile.highestIndex) {
                 centroid.add(vertices[i]);
             }
