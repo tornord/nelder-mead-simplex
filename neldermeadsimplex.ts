@@ -190,9 +190,9 @@ class NelderMeadSimplex {
 
     static shrinkSimplex(errorProfile: ErrorProfile, vertices: Vector[], errorValues: number[],
         , objectiveFunction: (x: number[]) => number) {
-        let lowestVertex = vertices[errorProfile.LowestIndex];
+        let lowestVertex = vertices[errorProfile.lowestIndex];
         for (let i = 0; i < vertices.length; i++) {
-            if (i != errorProfile.LowestIndex) {
+            if (i != errorProfile.lowestIndex) {
                 vertices[i].add(lowestVertex).multiply(0.5);
                 errorValues[i] = objectiveFunction(vertices[i].values);
             }
