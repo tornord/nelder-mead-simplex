@@ -1,4 +1,4 @@
-class SimplexConstant {
+export class SimplexConstant {
     constructor(public value: number, public initialPerturbation: number) {   
     }
 }
@@ -10,25 +10,27 @@ class RegressionResult {
 }
 
 class ErrorProfile {
-    constructor(public highestIndex: number, public nextHighestIndex: number, 
-        public lowestIndex: number) {   
+    constructor() {   
     }
+	highestIndex: number;
+	nextHighestIndex: number;
+	lowestIndex: number;
 }
 
 class Vector {
-    constructor(public dimensions: number) {
+    constructor(public dims: number) {
         this.values = [];
-        this.values.length = dimensions;
+        this.values.length = dims;
         for (let i=0; i<this.values.length; i++) {
             this.values[i] = 0;
         }
     }
 
+    values: number[];
+
     get dimensions(): number {
         return this.values.length;
     }
-
-    dimensions: number[];
 
     clone() {
         let res = new Vector(this.dimensions);
@@ -64,7 +66,7 @@ class Vector {
     }
 }
 
-class NelderMeadSimplex {
+export class NelderMeadSimplex {
     constructor() {
     }
 
@@ -79,10 +81,9 @@ class NelderMeadSimplex {
 
         let evaluationCount = 0;
         let terminationReason = "Unspecified";
-        let errorProfile;
-
+ 
         let errorValues = NelderMeadSimplex.initializeErrorValues(vertices, objectiveFunction);
-        let errorProfile;
+		let errorProfile: ErrorProfile;
 
         while (true) {
             errorProfile = NelderMeadSimplex.evaluateSimplex(errorValues);
@@ -98,7 +99,7 @@ class NelderMeadSimplex {
             }
             else if (reflectionPointValue >= errorValues[errorProfile.nextHighestIndex]) {
                 let currentWorst = errorValues[errorProfile.highestIndex];
-                contractionPointValue = NelderMeadSimplex.tryToScaleSimplex(0.5, errorProfile, vertices, errorValues, objectiveFunction);
+                let contractionPointValue = NelderMeadSimplex.tryToScaleSimplex(0.5, errorProfile, vertices, errorValues, objectiveFunction);
                 evaluationCount++;
                 if (contractionPointValue >= currentWorst) {
                     NelderMeadSimplex.shrinkSimplex(errorProfile, vertices, errorValues, objectiveFunction);
@@ -116,7 +117,7 @@ class NelderMeadSimplex {
 
     static initializeVertices(simplexConstants: SimplexConstant[]) {
         let numDimensions = simplexConstants.length;
-        let vertices = [];
+        let vertices: Vector[] = [];
         let p0 = new Vector(numDimensions);
         for (let i=0; i<numDimensions; i++) {
             p0.values[i] = simplexConstants[i].value;
@@ -132,7 +133,7 @@ class NelderMeadSimplex {
     }
 
     static initializeErrorValues(vertices: Vector[], objectiveFunction: (x: number[]) => number) {
-        let errorValues = [];
+        let errorValues: any[] = [];
         for (let i=0; i<vertices.length; i++) {
             errorValues.push(objectiveFunction(vertices[i].values));
         }
